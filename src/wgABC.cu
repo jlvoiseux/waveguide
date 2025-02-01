@@ -1,9 +1,8 @@
-// src/wgABC.c
 #include "wgABC.h"
 #include "wgCommon.h"
 
-#include <cstdio>
-#include <cstdlib>
+#include <stdio.h>
+#include <stdlib.h>
 
 typedef struct
 {
@@ -11,20 +10,39 @@ typedef struct
 	double* pEzx0;
 	double* pEyx1;
 	double* pEzx1;
+
 	double* pExy0;
 	double* pEzy0;
 	double* pExy1;
 	double* pEzy1;
+
 	double* pExz0;
 	double* pEyz0;
 	double* pExz1;
 	double* pEyz1;
-	double	coef;
+
+	double coef;
 } wgABCData;
 
 static wgABCData gABC = {nullptr};
 
-void wgInitABC(wgGrid* pGrid)
+void wgABCCleanup()
+{
+	free(gABC.pEyx0);
+	free(gABC.pEzx0);
+	free(gABC.pEyx1);
+	free(gABC.pEzx1);
+	free(gABC.pExy0);
+	free(gABC.pEzy0);
+	free(gABC.pExy1);
+	free(gABC.pEzy1);
+	free(gABC.pExz0);
+	free(gABC.pEyz0);
+	free(gABC.pExz1);
+	free(gABC.pEyz1);
+}
+
+void wgABCInit(wgGrid* pGrid)
 {
 	if (!pGrid)
 	{
@@ -50,54 +68,144 @@ void wgInitABC(wgGrid* pGrid)
 	gABC.pEyz1 = (double*)calloc((size_t)pGrid->sizeX * (pGrid->sizeY - 1), sizeof(double));
 }
 
-void wgApplyABC(wgGrid* pGrid)
+void wgABCApply(wgGrid* pGrid)
 {
-	int		  i, j;
+	if (!pGrid)
+		return;
+
 	const int sizeX = pGrid->sizeX;
 	const int sizeY = pGrid->sizeY;
 	const int sizeZ = pGrid->sizeZ;
 
-	for (i = 0; i < sizeY - 1; i++)
+	for (int j = 0; j < sizeY - 1; j++)
 	{
-		for (j = 0; j < sizeZ; j++)
+		for (int k = 0; k < sizeZ; k++)
 		{
-			int		idx		= WG_IDX2(i, j, sizeZ);
-			double* pEy		= &pGrid->pEy[WG_IDX3(0, i, j, sizeY - 1, sizeZ)];
-			*pEy			= gABC.pEyx0[idx] + gABC.coef * (pGrid->pEy[WG_IDX3(1, i, j, sizeY - 1, sizeZ)] - *pEy);
-			gABC.pEyx0[idx] = pGrid->pEy[WG_IDX3(1, i, j, sizeY - 1, sizeZ)];
+			const int idx	= WG_IDX2(j, k, sizeZ);
+			double*	  pEy	= &pGrid->pEy[WG_IDX3(0, j, k, sizeY - 1, sizeZ)];
+			*pEy			= gABC.pEyx0[idx] + gABC.coef * (pGrid->pEy[WG_IDX3(1, j, k, sizeY - 1, sizeZ)] - *pEy);
+			gABC.pEyx0[idx] = pGrid->pEy[WG_IDX3(1, j, k, sizeY - 1, sizeZ)];
 		}
 	}
 
-	for (i = 0; i < sizeY - 1; i++)
+	for (int j = 0; j < sizeY; j++)
 	{
-		for (j = 0; j < sizeZ; j++)
+		for (int k = 0; k < sizeZ - 1; k++)
 		{
-			int		idx		= WG_IDX2(i, j, sizeZ);
-			double* pEy		= &pGrid->pEy[WG_IDX3(sizeX - 1, i, j, sizeY - 1, sizeZ)];
-			*pEy			= gABC.pEyx1[idx] + gABC.coef * (pGrid->pEy[WG_IDX3(sizeX - 2, i, j, sizeY - 1, sizeZ)] - *pEy);
-			gABC.pEyx1[idx] = pGrid->pEy[WG_IDX3(sizeX - 2, i, j, sizeY - 1, sizeZ)];
+			const int idx	= WG_IDX2(j, k, sizeZ - 1);
+			double*	  pEz	= &pGrid->pEz[WG_IDX3(0, j, k, sizeY, sizeZ - 1)];
+			*pEz			= gABC.pEzx0[idx] + gABC.coef * (pGrid->pEz[WG_IDX3(1, j, k, sizeY, sizeZ - 1)] - *pEz);
+			gABC.pEzx0[idx] = pGrid->pEz[WG_IDX3(1, j, k, sizeY, sizeZ - 1)];
 		}
 	}
 
-	for (i = 0; i < sizeX - 1; i++)
+	for (int j = 0; j < sizeY - 1; j++)
 	{
-		for (j = 0; j < sizeZ; j++)
+		for (int k = 0; k < sizeZ; k++)
 		{
-			int		idx		= WG_IDX2(i, j, sizeZ);
-			double* pEx		= &pGrid->pEx[WG_IDX3(i, 0, j, sizeY, sizeZ)];
-			*pEx			= gABC.pExy0[idx] + gABC.coef * (pGrid->pEx[WG_IDX3(i, 1, j, sizeY, sizeZ)] - *pEx);
-			gABC.pExy0[idx] = pGrid->pEx[WG_IDX3(i, 1, j, sizeY, sizeZ)];
+			const int idx	= WG_IDX2(j, k, sizeZ);
+			double*	  pEy	= &pGrid->pEy[WG_IDX3(sizeX - 1, j, k, sizeY - 1, sizeZ)];
+			*pEy			= gABC.pEyx1[idx] + gABC.coef * (pGrid->pEy[WG_IDX3(sizeX - 2, j, k, sizeY - 1, sizeZ)] - *pEy);
+			gABC.pEyx1[idx] = pGrid->pEy[WG_IDX3(sizeX - 2, j, k, sizeY - 1, sizeZ)];
 		}
 	}
 
-	for (i = 0; i < sizeX - 1; i++)
+	for (int j = 0; j < sizeY; j++)
 	{
-		for (j = 0; j < sizeY; j++)
+		for (int k = 0; k < sizeZ - 1; k++)
 		{
-			int		idx		= WG_IDX2(i, j, sizeY);
-			double* pEx		= &pGrid->pEx[WG_IDX3(i, j, 0, sizeY, sizeZ)];
+			const int idx	= WG_IDX2(j, k, sizeZ - 1);
+			double*	  pEz	= &pGrid->pEz[WG_IDX3(sizeX - 1, j, k, sizeY, sizeZ - 1)];
+			*pEz			= gABC.pEzx1[idx] + gABC.coef * (pGrid->pEz[WG_IDX3(sizeX - 2, j, k, sizeY, sizeZ - 1)] - *pEz);
+			gABC.pEzx1[idx] = pGrid->pEz[WG_IDX3(sizeX - 2, j, k, sizeY, sizeZ - 1)];
+		}
+	}
+
+	for (int i = 0; i < sizeX - 1; i++)
+	{
+		for (int k = 0; k < sizeZ; k++)
+		{
+			const int idx	= WG_IDX2(i, k, sizeZ);
+			double*	  pEx	= &pGrid->pEx[WG_IDX3(i, 0, k, sizeY, sizeZ)];
+			*pEx			= gABC.pExy0[idx] + gABC.coef * (pGrid->pEx[WG_IDX3(i, 1, k, sizeY, sizeZ)] - *pEx);
+			gABC.pExy0[idx] = pGrid->pEx[WG_IDX3(i, 1, k, sizeY, sizeZ)];
+		}
+	}
+
+	for (int i = 0; i < sizeX; i++)
+	{
+		for (int k = 0; k < sizeZ - 1; k++)
+		{
+			const int idx	= WG_IDX2(i, k, sizeZ - 1);
+			double*	  pEz	= &pGrid->pEz[WG_IDX3(i, 0, k, sizeY, sizeZ - 1)];
+			*pEz			= gABC.pEzy0[idx] + gABC.coef * (pGrid->pEz[WG_IDX3(i, 1, k, sizeY, sizeZ - 1)] - *pEz);
+			gABC.pEzy0[idx] = pGrid->pEz[WG_IDX3(i, 1, k, sizeY, sizeZ - 1)];
+		}
+	}
+
+	for (int i = 0; i < sizeX - 1; i++)
+	{
+		for (int k = 0; k < sizeZ; k++)
+		{
+			const int idx	= WG_IDX2(i, k, sizeZ);
+			double*	  pEx	= &pGrid->pEx[WG_IDX3(i, sizeY - 1, k, sizeY, sizeZ)];
+			*pEx			= gABC.pExy1[idx] + gABC.coef * (pGrid->pEx[WG_IDX3(i, sizeY - 2, k, sizeY, sizeZ)] - *pEx);
+			gABC.pExy1[idx] = pGrid->pEx[WG_IDX3(i, sizeY - 2, k, sizeY, sizeZ)];
+		}
+	}
+
+	for (int i = 0; i < sizeX; i++)
+	{
+		for (int k = 0; k < sizeZ - 1; k++)
+		{
+			const int idx	= WG_IDX2(i, k, sizeZ - 1);
+			double*	  pEz	= &pGrid->pEz[WG_IDX3(i, sizeY - 1, k, sizeY, sizeZ - 1)];
+			*pEz			= gABC.pEzy1[idx] + gABC.coef * (pGrid->pEz[WG_IDX3(i, sizeY - 2, k, sizeY, sizeZ - 1)] - *pEz);
+			gABC.pEzy1[idx] = pGrid->pEz[WG_IDX3(i, sizeY - 2, k, sizeY, sizeZ - 1)];
+		}
+	}
+
+	for (int i = 0; i < sizeX - 1; i++)
+	{
+		for (int j = 0; j < sizeY; j++)
+		{
+			const int idx	= WG_IDX2(i, j, sizeY);
+			double*	  pEx	= &pGrid->pEx[WG_IDX3(i, j, 0, sizeY, sizeZ)];
 			*pEx			= gABC.pExz0[idx] + gABC.coef * (pGrid->pEx[WG_IDX3(i, j, 1, sizeY, sizeZ)] - *pEx);
 			gABC.pExz0[idx] = pGrid->pEx[WG_IDX3(i, j, 1, sizeY, sizeZ)];
+		}
+	}
+
+	for (int i = 0; i < sizeX; i++)
+	{
+		for (int j = 0; j < sizeY - 1; j++)
+		{
+			const int idx	= WG_IDX2(i, j, sizeY - 1);
+			double*	  pEy	= &pGrid->pEy[WG_IDX3(i, j, 0, sizeY - 1, sizeZ)];
+			*pEy			= gABC.pEyz0[idx] + gABC.coef * (pGrid->pEy[WG_IDX3(i, j, 1, sizeY - 1, sizeZ)] - *pEy);
+			gABC.pEyz0[idx] = pGrid->pEy[WG_IDX3(i, j, 1, sizeY - 1, sizeZ)];
+		}
+	}
+
+	for (int i = 0; i < sizeX - 1; i++)
+	{
+		for (int j = 0; j < sizeY; j++)
+		{
+			const int idx	= WG_IDX2(i, j, sizeY);
+			double*	  pEx	= &pGrid->pEx[WG_IDX3(i, j, sizeZ - 1, sizeY, sizeZ)];
+			*pEx			= gABC.pExz1[idx] + gABC.coef * (pGrid->pEx[WG_IDX3(i, j, sizeZ - 2, sizeY, sizeZ)] - *pEx);
+			gABC.pExz1[idx] = pGrid->pEx[WG_IDX3(i, j, sizeZ - 2, sizeY, sizeZ)];
+		}
+	}
+
+	for (int i = 0; i < sizeX; i++)
+	{
+		for (int j = 0; j < sizeY - 1; j++)
+		{
+			const int idx	= WG_IDX2(i, j, sizeY - 1);
+			double*	  pEy	= &pGrid->pEy[WG_IDX3(i, j, sizeZ - 1, sizeY - 1, sizeZ)];
+			*pEy			= gABC.pEyz1[idx] + gABC.coef * (pGrid->pEy[WG_IDX3(i, j, sizeZ - 2, sizeY - 1, sizeZ)] - *pEy);
+			gABC.pEyz1[idx] = pGrid->pEy[WG_IDX3(i, j, sizeZ - 2, sizeY - 1, sizeZ)];
 		}
 	}
 }

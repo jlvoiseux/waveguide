@@ -1,5 +1,6 @@
 #pragma once
 #include "wgGrid.h"
 
-void wgInitABC(wgGrid* pGrid);
-void wgApplyABC(wgGrid* pGrid);
+void wgABCInit(wgGrid* pGrid);
+void wgABCApply(wgGrid* pGrid);
+void wgABCCleanup();

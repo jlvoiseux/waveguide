@@ -18,8 +18,8 @@ int main()
 	wgInitializeECoefficients(&grid);
 	wgInitializeHCoefficients(&grid);
 
-	wgInitSource(grid.cdtds, 20.0);
-	wgInitABC(&grid);
+	wgInitSource(grid.cdtds, 15.0);
+	wgABCInit(&grid);
 	wgPlotInit("dipole_sim");
 	wgOutputInit("dipole_sim");
 
@@ -33,7 +33,7 @@ int main()
 		int centerZ = WG_GRID_SIZE / 2;
 		grid.pEx[WG_IDX3(centerX, centerY, centerZ, WG_GRID_SIZE, WG_GRID_SIZE)] += wgGetSourceValue((double)t, 0.0);
 
-		wgApplyABC(&grid);
+		wgABCApply(&grid);
 
 		if (t % 5 == 0)
 		{
@@ -42,8 +42,9 @@ int main()
 		}
 	}
 
-	wgPlotCleanup();
 	wgOutputCleanup();
+	wgPlotCleanup();
+	wgABCCleanup();
 	wgFreeGrid(&grid);
 
 	return 0;
