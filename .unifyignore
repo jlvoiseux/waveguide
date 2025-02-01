@@ -1,0 +1,6 @@
+cmake-build-debug-visual-studio/*
+unify/*
+.clang-format
+.clang-tidy
+.idea/*
+.git/*
