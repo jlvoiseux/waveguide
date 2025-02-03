@@ -5,7 +5,10 @@
 
 #define WG_IMP0 377.0
 
-#define WG_GRID_SIZE 32
+#define WG_GRID_SIZE_X 32
+#define WG_GRID_SIZE_Y 31
+#define WG_GRID_SIZE_Z 31
+
 #define WG_SIM_STEPS 300
 
 #define WG_PI 3.14159265358979323846
