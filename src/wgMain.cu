@@ -26,7 +26,7 @@ int main()
 
 	wgInitSource(grid.cdtds, 15.0);
 	wgABCInit(&grid);
-	wgPlotInit("dipole_sim", WG_PLOT_3D);
+	wgPlotInit("dipole_sim", WG_PLOT_ALL);
 	wgOutputInit("dipole_sim");
 
 	for (int t = 0; t < WG_SIM_STEPS; t++)

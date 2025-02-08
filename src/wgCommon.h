@@ -9,6 +9,6 @@
 #define WG_GRID_SIZE_Y 31
 #define WG_GRID_SIZE_Z 31
 
-#define WG_SIM_STEPS 300
+#define WG_SIM_STEPS 100
 
 #define WG_PI 3.14159265358979323846
